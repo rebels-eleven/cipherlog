@@ -55,8 +55,10 @@ final class PrivacyManifestTests: XCTestCase {
                                "\(file.lastPathComponent) calls a \(category) API that PrivacyInfo.xcprivacy does not declare")
             }
         }
-        // The two the library is known to use; a change that drops one should update the manifest too.
-        XCTAssertEqual(used, ["NSPrivacyAccessedAPICategoryFileTimestamp", "NSPrivacyAccessedAPICategoryDiskSpace"])
+        // The three the library is known to use; a change that drops one should update the manifest too.
+        XCTAssertEqual(used, ["NSPrivacyAccessedAPICategoryFileTimestamp", "NSPrivacyAccessedAPICategoryDiskSpace",
+                              "NSPrivacyAccessedAPICategoryUserDefaults"])
+        XCTAssertEqual(declared["NSPrivacyAccessedAPICategoryUserDefaults"], ["CA92.1"])
         XCTAssertEqual(Set(declared.keys), used, "the manifest declares a category the sources no longer use")
     }
 }

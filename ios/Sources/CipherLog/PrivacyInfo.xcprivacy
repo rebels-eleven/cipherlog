@@ -6,7 +6,10 @@
   - File timestamp: modification dates of the library's own log files and export folders, inside the app or App Group
     container (retention and export ageing, SPEC.md 3.4 and 4).
   - Disk space: the default device collector logs the rounded free space, so a "disk full" write failure can be told
-    apart from other ones (SPEC.md 7.1).
+    apart from other ones (SPEC.md 7.1). The optional installDates collector reads the creation date of the app
+    container's Library folder (approximate install day). It reads no timestamp outside the app's data container.
+  - User defaults: the optional versionHistory and installDates collectors keep the app versions seen on this device
+    in the app's own defaults (key prefix "cipherlog."). An app that passes an App Group suite declares 1C8F.1 in its own manifest.
   The library collects nothing and sends nothing: files leave the device only when the app shares them.
 -->
 <plist version="1.0">
@@ -33,6 +36,14 @@
 			<key>NSPrivacyAccessedAPITypeReasons</key>
 			<array>
 				<string>E174.1</string>
+			</array>
+		</dict>
+		<dict>
+			<key>NSPrivacyAccessedAPIType</key>
+			<string>NSPrivacyAccessedAPICategoryUserDefaults</string>
+			<key>NSPrivacyAccessedAPITypeReasons</key>
+			<array>
+				<string>CA92.1</string>
 			</array>
 		</dict>
 	</array>

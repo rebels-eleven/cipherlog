@@ -11,7 +11,10 @@ struct ExampleApp: App {
     init() {
         // 1. Once per process (the app here; each extension calls it too). With an App Group, pass
         //    `appGroup: "group.…"` so the app's export carries the extensions' logs as well.
-        CipherLog.start(key: testLogKey)
+        //    The sample also opts into the six optional device collectors (version history, install dates, memory,
+        //    screen, network type, folder sizes); `optional()` is called here, on the main thread, for `screen`.
+        CipherLog.start(key: testLogKey,
+                        options: .init(collectors: CipherLogCollector.defaults + CipherLogCollector.optional()))
     }
 
     var body: some Scene {
