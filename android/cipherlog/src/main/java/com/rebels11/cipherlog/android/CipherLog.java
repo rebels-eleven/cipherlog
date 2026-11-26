@@ -5,7 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
+import android.os.Parcelable;
 import android.util.Log;
 import com.rebels11.cipherlog.CipherLogCollector;
 import com.rebels11.cipherlog.CipherLogConfig;
@@ -14,6 +16,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -469,21 +472,55 @@ public final class CipherLog {
         }
     }
 
+    /**
+     * The support mail. Each mail app (an app that handles {@code mailto:}) gets its own {@code ACTION_SEND} with the
+     * attachment, addressed to its package; one app opens directly, several open in a chooser. A selector on a
+     * chooser is not used: Samsung's chooser (One UI, Android 16) ignores it and shows "No apps can perform this
+     * action". Null when no mail app takes the attachment.
+     */
     static Intent mailIntent(Context context, Uri uri, String fileName, String email, String subject) {
-        ClipData clip = ClipData.newUri(context.getContentResolver(), fileName, uri);
+        PackageManager pm = context.getPackageManager();
+        if (pm == null) return null;
+        List<ResolveInfo> mailApps = pm.queryIntentActivities(
+                new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")), PackageManager.MATCH_DEFAULT_ONLY);
+        LinkedHashSet<String> packages = new LinkedHashSet<>();
+        if (mailApps != null) {
+            for (ResolveInfo info : mailApps) {
+                if (info != null && info.activityInfo != null && info.activityInfo.packageName != null) {
+                    packages.add(info.activityInfo.packageName);
+                }
+            }
+        }
+        List<Intent> targeted = new ArrayList<>();
+        for (String pkg : packages) {
+            Intent send = sendIntent(context, uri, fileName, email, subject);
+            send.setPackage(pkg);
+            if (canResolve(pm, send)) targeted.add(send);
+        }
+        if (targeted.isEmpty()) return null;
+        if (targeted.size() == 1) {
+            Intent only = targeted.get(0);
+            only.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            return only;
+        }
+        Intent first = targeted.remove(0);
+        Intent chooser = Intent.createChooser(first, subject != null ? subject : fileName);
+        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, targeted.toArray(new Parcelable[0]));
+        chooser.setClipData(first.getClipData());
+        chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
+        return chooser;
+    }
+
+    static Intent sendIntent(Context context, Uri uri, String fileName, String email, String subject) {
         Intent send = new Intent(Intent.ACTION_SEND);
         send.setType(CipherLogFileProvider.mimeTypeOf(fileName));
         send.putExtra(Intent.EXTRA_STREAM, uri);
         if (email != null && !email.isEmpty()) send.putExtra(Intent.EXTRA_EMAIL, new String[] {email});
         if (subject != null) send.putExtra(Intent.EXTRA_SUBJECT, subject);
-        send.setClipData(clip);
+        // The grant travels with ClipData, also through a chooser.
+        send.setClipData(ClipData.newUri(context.getContentResolver(), fileName, uri));
         send.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-        // Only apps that handle mailto: are offered; the app that is picked gets the ACTION_SEND above.
-        send.setSelector(new Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:")));
-        Intent chooser = Intent.createChooser(send, subject != null ? subject : fileName);
-        chooser.setClipData(clip);
-        chooser.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_ACTIVITY_NEW_TASK);
-        return chooser;
+        return send;
     }
 
     private static boolean canResolve(PackageManager pm, Intent intent) {

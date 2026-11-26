@@ -32,6 +32,8 @@ public final class MainActivity extends Activity {
         TextView warning = new TextView(this);
         warning.setText("This sample encrypts its logs to the TEST public key from vectors/test-key.json. Anyone with"
                 + " the published test private key can read them. Never ship the test key in an app.");
+        warning.setTextColor(0xFFC62828);
+        warning.setTextSize(15);
         warning.setPadding(0, 0, 0, pad);
         column.addView(warning);
 
