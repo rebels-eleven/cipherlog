@@ -6,6 +6,12 @@ on:
   pull_request:
   # The release workflow runs the same checks on the commit it releases, before the tag or anything else exists.
   workflow_call:
+    inputs:
+      skip_macos:
+        description: The macOS job ran on the maintainer's Mac (release with macos_from_mac)
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -101,6 +107,7 @@ jobs:
   swift:
     name: Swift (test, example app, pod lib lint)
     # On every push to main too: a release is made from main, and its commit must have passed the Swift tests.
+    if: ${{ !inputs.skip_macos }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

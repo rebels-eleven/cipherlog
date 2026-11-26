@@ -16,6 +16,11 @@ on:
         description: Version to release, like 0.1.0 or 0.1.0-alpha.1 (no leading v); the tag must not exist yet
         required: true
         type: string
+      macos_from_mac:
+        description: macOS steps (Swift tests, Mac CLI binaries, CocoaPods) were done on the maintainer's Mac, not here
+        required: false
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -34,6 +39,7 @@ jobs:
       version: ${{ steps.check.outputs.version }}
       prerelease: ${{ steps.check.outputs.prerelease }}
       sha: ${{ steps.check.outputs.sha }}
+      targets: ${{ steps.check.outputs.targets }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -41,6 +47,7 @@ jobs:
       - id: check
         env:
           TAG: ${{ inputs.version }}
+          FROM_MAC: ${{ inputs.macos_from_mac }}
           REF: ${{ github.ref }}
           SHA: ${{ github.sha }}
         run: |
@@ -74,7 +81,14 @@ jobs:
             echo "::error file=CHANGELOG.md::no section, or an empty one, for $TAG"; fail=1
           fi
           [ "$fail" = 0 ] || exit 1
+          if [ "$FROM_MAC" = true ]; then
+            printf '\n_The macOS steps of this release (Swift tests, the example app, pod lint, the Mac CLI binaries and the CocoaPods push) ran on the maintainer\x27s Mac, not in CI._\n' >> notes.md
+            targets='[{"target":"x86_64-unknown-linux-gnu","os":"ubuntu-22.04","native":true},{"target":"aarch64-unknown-linux-gnu","os":"ubuntu-22.04-arm","native":true}]'
+          else
+            targets='[{"target":"aarch64-apple-darwin","os":"macos-latest","native":true},{"target":"x86_64-apple-darwin","os":"macos-latest","native":false},{"target":"x86_64-unknown-linux-gnu","os":"ubuntu-22.04","native":true},{"target":"aarch64-unknown-linux-gnu","os":"ubuntu-22.04-arm","native":true}]'
+          fi
           {
+            echo "targets=$targets"
             echo "version=$TAG"
             echo "sha=$SHA"
             case "$TAG" in *-*) echo "prerelease=true" ;; *) echo "prerelease=false" ;; esac
@@ -91,6 +105,8 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/ci.yml
+    with:
+      skip_macos: ${{ inputs.macos_from_mac }}
 
   binaries:
     name: CLI ${{ matrix.target }}
@@ -100,12 +116,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        include:
-          - { target: aarch64-apple-darwin, os: macos-latest, native: true }
-          - { target: x86_64-apple-darwin, os: macos-latest, native: false }
-          # The oldest supported Ubuntu runners: the binary then runs on older glibc too.
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04, native: true }
-          - { target: aarch64-unknown-linux-gnu, os: ubuntu-22.04-arm, native: true }
+        # Mac targets are left out when the macOS steps ran on the maintainer's Mac (macos_from_mac).
+        include: ${{ fromJSON(needs.version.outputs.targets) }}
     runs-on: ${{ matrix.os }}
     env:
       TARGET: ${{ matrix.target }}
@@ -227,6 +239,7 @@ jobs:
   cocoapods:
     name: CocoaPods trunk
     needs: [version, publish-release]
+    if: ${{ !inputs.macos_from_mac }}
     runs-on: macos-latest
     permissions:
       contents: read
@@ -254,7 +267,8 @@ jobs:
     name: Update Formula/cipherlog.rb on main
     needs: [version, publish-release, cocoapods]
     # A skipped CocoaPods step must not hold back the formula; a failed one does.
-    if: ${{ !cancelled() && needs.publish-release.result == 'success' && needs.cocoapods.result != 'failure' }}
+    # With macos_from_mac the Mac binaries are uploaded by hand, and the formula is updated by hand with their sums.
+    if: ${{ !cancelled() && !inputs.macos_from_mac && needs.publish-release.result == 'success' && needs.cocoapods.result != 'failure' }}
     runs-on: ubuntu-24.04
     permissions:
       contents: write
