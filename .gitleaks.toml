@@ -1,0 +1,14 @@
+# gitleaks config: the default rules, plus the published TEST key, which is public on purpose
+# (vectors/test-key.json; README: "never ship it"). Any other key material fails CI.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "published test key and shared vectors"
+regexes = [
+  '''5856624c8e530d58d179b4aff156af9b220175f5d16ae8dcf201c1bd7fe3d251''',
+  '''ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170''',
+]
+paths = [
+  '''^CHANGELOG\.md$''',
+]
