@@ -6,7 +6,7 @@ license = "MIT"
 description = "Reference CLI and Rust implementation of the cipherlog-v1 encrypted log format"
 repository = "https://github.com/rebels-eleven/cipherlog"
 homepage = "https://rebels11.com"
-authors = ["rebels-eleven <hello@rebels11.com>"]
+authors = ["rebels11 <hello@rebels11.com>"]
 publish = false
 
 [[bin]]

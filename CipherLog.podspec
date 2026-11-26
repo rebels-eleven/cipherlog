@@ -11,7 +11,7 @@ Pod::Spec.new do |s|
   DESC
   s.homepage         = 'https://github.com/rebels-eleven/cipherlog'
   s.license          = { :type => 'MIT', :file => 'LICENSE' }
-  s.author           = { 'rebels-eleven' => 'hello@rebels11.com' }
+  s.author           = { 'rebels11' => 'hello@rebels11.com' }
   s.source           = { :git => 'https://github.com/rebels-eleven/cipherlog.git', :tag => s.version.to_s }
 
   s.ios.deployment_target = '17.0'

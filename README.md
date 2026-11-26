@@ -322,4 +322,4 @@ Questions, bugs and ideas: [GitHub issues](https://github.com/rebels-eleven/ciph
 
 ## License
 
-[MIT](LICENSE). Copyright (c) 2026 rebels-eleven.
+[MIT](LICENSE). Copyright (c) 2026 rebels11.
