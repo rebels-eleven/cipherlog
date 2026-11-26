@@ -12,22 +12,22 @@ class Cipherlog < Formula
   on_macos do
     on_arm do
       url "https://github.com/rebels-eleven/cipherlog/releases/download/0.1.0-alpha.1/cipherlog-0.1.0-alpha.1-aarch64-apple-darwin.tar.gz"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000" # aarch64-apple-darwin
+      sha256 "167da12d70a6d18153335f879261eff5d205c245aa6146bd732629f6784d6e4f" # aarch64-apple-darwin
     end
     on_intel do
       url "https://github.com/rebels-eleven/cipherlog/releases/download/0.1.0-alpha.1/cipherlog-0.1.0-alpha.1-x86_64-apple-darwin.tar.gz"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000" # x86_64-apple-darwin
+      sha256 "58dab0f9b3af5dfb7ad6849c018deed07bac853540d0d45dd44a0cf437ef9986" # x86_64-apple-darwin
     end
   end
 
   on_linux do
     on_arm do
       url "https://github.com/rebels-eleven/cipherlog/releases/download/0.1.0-alpha.1/cipherlog-0.1.0-alpha.1-aarch64-unknown-linux-gnu.tar.gz"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000" # aarch64-unknown-linux-gnu
+      sha256 "419a843be59634d2ea764cea1df086af028e38d1f7a63aa77984117baa5d63e8" # aarch64-unknown-linux-gnu
     end
     on_intel do
       url "https://github.com/rebels-eleven/cipherlog/releases/download/0.1.0-alpha.1/cipherlog-0.1.0-alpha.1-x86_64-unknown-linux-gnu.tar.gz"
-      sha256 "0000000000000000000000000000000000000000000000000000000000000000" # x86_64-unknown-linux-gnu
+      sha256 "7fbe1ceae779cf4c3368115562f16dbf62edc5dc24a965a0978627fcac668490" # x86_64-unknown-linux-gnu
     end
   end
 
