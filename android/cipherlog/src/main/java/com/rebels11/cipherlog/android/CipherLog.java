@@ -95,6 +95,14 @@ public final class CipherLog {
             return this;
         }
 
+        /** Adds collectors after the built-in ones, for example {@link OptionalCollectors#all}. */
+        public Options addCollectors(List<? extends CipherLogCollector> collectors) {
+            if (collectors != null) {
+                for (CipherLogCollector collector : collectors) addCollector(collector);
+            }
+            return this;
+        }
+
         /** Masks every message, throwable message and collector line before it is written. Default: none. */
         public Options scrub(CipherLogConfig.Scrub scrub) {
             this.scrub = scrub;

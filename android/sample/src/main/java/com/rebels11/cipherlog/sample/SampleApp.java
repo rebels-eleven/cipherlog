@@ -2,6 +2,7 @@ package com.rebels11.cipherlog.sample;
 
 import android.app.Application;
 import com.rebels11.cipherlog.android.CipherLog;
+import com.rebels11.cipherlog.android.OptionalCollectors;
 
 /** The whole integration: one start per process, then CipherLog.d/i/w/e wherever android.util.Log was. */
 public final class SampleApp extends Application {
@@ -15,7 +16,9 @@ public final class SampleApp extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        CipherLog.start(this, TEST_KEY);
+        // The optional device collectors (version history, install dates, memory, screen, network, storage) are off by
+        // default; the sample opts into all six so they show up in its device block.
+        CipherLog.start(this, TEST_KEY, new CipherLog.Options().addCollectors(OptionalCollectors.all(this)));
         CipherLog.i("App", "started");
 
         // cipherlog installs no crash handler; an app's own handler can flush the file before the process dies.
