@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Android 11+ package visibility: CipherLog.shareIntent asks whether any app can send mail. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.SENDTO" />
+            <data android:scheme="mailto" />
+        </intent>
+    </queries>
+
+    <application>
+        <!--
+            The library's own provider, a separate class with its own authority: it never clashes in the manifest merge
+            with an app's androidx FileProvider. It serves only the export bundles in <cache>/cipherlog-exports, read
+            only, through per-Uri grants.
+        -->
+        <provider
+            android:name="com.rebels11.cipherlog.android.CipherLogFileProvider"
+            android:authorities="${applicationId}.cipherlog"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+    </application>
+</manifest>

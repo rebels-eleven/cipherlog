@@ -1,0 +1,24 @@
+# Runtime dependencies of the published libraries: Tink only. Everything else here is build or test tooling.
+[versions]
+agp = "9.1.1"
+# HPKE (RFC 9180) and ChaCha20-Poly1305. The writer uses Tink's internal HPKE and nonce-taking AEAD classes, which carry
+# no compatibility promise: raise this only together with a run of the vectors.
+tink = "1.24.0"
+junit = "4.13.2"
+# Build-time only: the annotations Tink's classes carry, so javac -Werror finds them (the runtime POM excludes them).
+errorProne = "2.41.0"
+mavenPublish = "0.37.0"
+animalsniffer = "2.0.1"
+gummyBears = "0.16.0"
+
+[libraries]
+tink-android = { group = "com.google.crypto.tink", name = "tink-android", version.ref = "tink" }
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+error-prone-annotations = { group = "com.google.errorprone", name = "error_prone_annotations", version.ref = "errorProne" }
+gummy-bears-api23 = { group = "com.toasttab.android", name = "gummy-bears-api-23", version.ref = "gummyBears" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }
+android-library = { id = "com.android.library", version.ref = "agp" }
+maven-publish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
+animalsniffer = { id = "ru.vyarus.animalsniffer", version.ref = "animalsniffer" }
