@@ -1,0 +1,321 @@
+name: Release
+
+# Started by hand on main: Actions > Release > Run workflow, or `gh workflow run release.yml --ref main -f version=0.1.0`.
+# The tag (0.1.0 or 0.1.0-alpha.1, without a leading "v") does not exist yet and is created by this workflow, at the
+# commit it tested. Swift Package Manager installs straight from git tags, so a pushed tag is already a release; here it
+# appears only after every test (ubuntu and macOS, the Swift job included) and every binary build is green.
+#
+# Order, so that what cannot be undone comes last: version check and release notes, tests and binaries, a DRAFT GitHub
+# release (no tag yet; can be deleted), Maven Central (final once it succeeds), then publishing the draft creates the
+# tag (Swift Package Manager), then CocoaPods and the Homebrew formula. A failure before Maven Central leaves at most a
+# draft release to delete; nothing is published.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version to release, like 0.1.0 or 0.1.0-alpha.1 (no leading v); the tag must not exist yet
+        required: true
+        type: string
+
+permissions: {}
+
+# One release at a time, in the order they were started.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  version:
+    name: Version, tag and release notes
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.check.outputs.version }}
+      prerelease: ${{ steps.check.outputs.prerelease }}
+      sha: ${{ steps.check.outputs.sha }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - id: check
+        env:
+          TAG: ${{ inputs.version }}
+          REF: ${{ github.ref }}
+          SHA: ${{ github.sha }}
+        run: |
+          if [ "$REF" != refs/heads/main ]; then echo "::error::Run the release on main, not $REF"; exit 1; fi
+          if ! printf '%s' "$TAG" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$'; then
+            echo "::error::$TAG is not a version like 1.2.3 or 1.2.3-alpha.1 (no leading v)"
+            exit 1
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null; then
+            echo "::error::Tag $TAG exists already; a version is released once"
+            exit 1
+          fi
+          fail=0
+          check() {
+            if [ "$2" != "$TAG" ]; then echo "::error file=$1::version '$2' in $1 does not match $TAG"; fail=1; fi
+          }
+          check android/gradle.properties "$(sed -n 's/^VERSION_NAME=//p' android/gradle.properties)"
+          check cli/Cargo.toml "$(grep -m1 '^version = ' cli/Cargo.toml | cut -d'"' -f2)"
+          check CipherLog.podspec "$(grep -m1 's.version *=' CipherLog.podspec | cut -d"'" -f2)"
+          check ios/Sources/CipherLog/CipherLog.swift \
+            "$(sed -n 's/^ *public static let version = "\(.*\)"$/\1/p' ios/Sources/CipherLog/CipherLog.swift)"
+          # The release notes are the CHANGELOG section of this version; it must hold text, checked here, before
+          # anything is published.
+          awk -v tag="$TAG" '
+            index($0, "## [" tag "]") == 1 { on = 1; next }
+            on && /^## \[/ { exit }
+            on && /^\[[^]]+\]: / { next }
+            on { print }
+          ' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "::error file=CHANGELOG.md::no section, or an empty one, for $TAG"; fail=1
+          fi
+          [ "$fail" = 0 ] || exit 1
+          {
+            echo "version=$TAG"
+            echo "sha=$SHA"
+            case "$TAG" in *-*) echo "prerelease=true" ;; *) echo "prerelease=false" ;; esac
+          } >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-notes
+          path: notes.md
+          if-no-files-found: error
+
+  tests:
+    name: Tests
+    needs: version
+    permissions:
+      contents: read
+    uses: ./.github/workflows/ci.yml
+
+  binaries:
+    name: CLI ${{ matrix.target }}
+    needs: version
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - { target: aarch64-apple-darwin, os: macos-latest, native: true }
+          - { target: x86_64-apple-darwin, os: macos-latest, native: false }
+          # The oldest supported Ubuntu runners: the binary then runs on older glibc too.
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04, native: true }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-22.04-arm, native: true }
+    runs-on: ${{ matrix.os }}
+    env:
+      TARGET: ${{ matrix.target }}
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.sha }}
+          persist-credentials: false
+      - name: Rust toolchain
+        run: |
+          if ! command -v rustup >/dev/null; then
+            # Not every runner image has rustup (the arm64 Linux images may not).
+            curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --profile minimal --default-toolchain none
+            echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+            export PATH="$HOME/.cargo/bin:$PATH"
+          fi
+          rustup toolchain install stable --profile minimal --target "$TARGET"
+          rustup default stable
+      - name: Build
+        working-directory: cli
+        run: cargo build --release --locked --target "$TARGET"
+      - name: Smoke test
+        if: matrix.native
+        run: test "$(cli/target/$TARGET/release/cipherlog --version)" = "$VERSION"
+      - name: Package with a SHA-256 file
+        run: |
+          name="cipherlog-$VERSION-$TARGET"
+          mkdir -p "dist/$name"
+          cp "cli/target/$TARGET/release/cipherlog" LICENSE README.md "dist/$name/"
+          tar -C "dist/$name" -czf "dist/$name.tar.gz" cipherlog LICENSE README.md
+          (cd dist && shasum -a 256 "$name.tar.gz" > "$name.tar.gz.sha256" && cat "$name.tar.gz.sha256")
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: cli-${{ matrix.target }}
+          path: |
+            dist/*.tar.gz
+            dist/*.tar.gz.sha256
+          if-no-files-found: error
+
+  draft-release:
+    name: Draft GitHub release (no tag yet)
+    needs: [version, tests, binaries]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.version.outputs.version }}
+      SHA: ${{ needs.version.outputs.sha }}
+      PRERELEASE: ${{ needs.version.outputs.prerelease }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: cli-*
+          path: dist
+          merge-multiple: true
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-notes
+      - name: Create the draft with binaries, checksums and the CHANGELOG section
+        run: |
+          flag=""
+          [ "$PRERELEASE" = true ] && flag="--prerelease"
+          # A draft creates no tag; publishing it later creates the tag at $SHA, the commit the tests ran on.
+          gh release create "$TAG" dist/*.tar.gz dist/*.tar.gz.sha256 --repo "$GITHUB_REPOSITORY" --draft \
+            --target "$SHA" --title "$TAG" --notes-file notes.md $flag
+
+  maven-central:
+    name: Publish to Maven Central
+    needs: [version, draft-release]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.sha }}
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: Publish and release (signed)
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyId: ${{ secrets.SIGNING_KEY_ID }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          # The build signs only when a key is set; Central rejects unsigned artifacts, so fail early instead.
+          for v in ORG_GRADLE_PROJECT_mavenCentralUsername ORG_GRADLE_PROJECT_mavenCentralPassword \
+                   ORG_GRADLE_PROJECT_signingInMemoryKey; do
+            if [ -z "${!v}" ]; then echo "::error::secret for $v is not set"; exit 1; fi
+          done
+          ./gradlew publishToMavenCentral --no-daemon --no-configuration-cache
+
+  publish-release:
+    name: Publish the release (creates the tag)
+    needs: [version, maven-central]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.version.outputs.version }}
+      SHA: ${{ needs.version.outputs.sha }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Publish the draft; GitHub creates the tag at the tested commit
+        run: |
+          gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+          tagged="$(gh api "repos/$GITHUB_REPOSITORY/commits/$TAG" --jq .sha)"
+          if [ "$tagged" != "$SHA" ]; then echo "::error::tag $TAG is at $tagged, expected $SHA"; exit 1; fi
+
+  cocoapods:
+    name: CocoaPods trunk
+    needs: [version, publish-release]
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.version.outputs.version }}
+          persist-credentials: false
+      - name: pod trunk push
+        env:
+          COCOAPODS_TRUNK_TOKEN: ${{ secrets.COCOAPODS_TRUNK_TOKEN }}
+          LANG: en_US.UTF-8
+        run: |
+          # Trunk is read-only from 2 December 2026: later versions ship through Swift Package Manager only.
+          if [ "$(date -u +%Y%m%d)" -ge 20261202 ]; then
+            echo "::notice::CocoaPods trunk is read-only since 2026-12-02; skipped (Swift Package Manager only)."
+            exit 0
+          fi
+          if [ -z "$COCOAPODS_TRUNK_TOKEN" ]; then echo "::error::COCOAPODS_TRUNK_TOKEN is not set"; exit 1; fi
+          xcode="$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -n 1)"
+          sudo xcode-select -s "$xcode"
+          pod trunk push CipherLog.podspec --allow-warnings
+
+  homebrew:
+    name: Update Formula/cipherlog.rb on main
+    needs: [version, publish-release, cocoapods]
+    # A skipped CocoaPods step must not hold back the formula; a failed one does.
+    if: ${{ !cancelled() && needs.publish-release.result == 'success' && needs.cocoapods.result != 'failure' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    env:
+      TAG: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: cli-*
+          path: dist
+          merge-multiple: true
+      - name: New version and checksums
+        id: formula
+        run: |
+          f=Formula/cipherlog.rb
+          old="$(sed -n 's/^  version "\(.*\)"$/\1/p' "$f")"
+          test -n "$old"
+          # Never move the formula back: a re-run of an older release after a newer one leaves it alone.
+          newer="$(python3 - "$TAG" "$old" <<'PY'
+          import re, sys
+          def key(v):
+              m = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.]+))?", v)
+              core = tuple(int(x) for x in m.group(1, 2, 3))
+              if m.group(4) is None:
+                  return core + ((1,),)
+              ids = tuple((0, int(p), "") if p.isdigit() else (1, 0, p) for p in m.group(4).split("."))
+              return core + ((0,) + ids,)
+          print("yes" if key(sys.argv[1]) >= key(sys.argv[2]) else "no")
+          PY
+          )"
+          if [ "$newer" != yes ]; then
+            echo "::notice::the formula has $old, newer than $TAG; left as it is"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          old_re="$(printf '%s' "$old" | sed 's/[.]/\\./g')"
+          sed -i "s/$old_re/$TAG/g" "$f"
+          for t in aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu aarch64-unknown-linux-gnu; do
+            sum="$(cut -d' ' -f1 "dist/cipherlog-$TAG-$t.tar.gz.sha256")"
+            printf '%s' "$sum" | grep -Eq '^[0-9a-f]{64}$'
+            sed -i -E "s/^( *sha256 \")[0-9a-f]{64}(\" # $t)$/\1$sum\2/" "$f"
+            grep -q "$sum\" # $t\$" "$f"
+          done
+          ruby -c "$f"
+          git diff --stat
+      - name: Commit to main
+        if: steps.formula.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/cipherlog.rb
+          git diff --cached --quiet && { echo "Formula already up to date"; exit 0; }
+          git commit -m "Formula: cipherlog $TAG"
+          # main may have moved since the checkout: rebase the one formula commit onto it and try again.
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:main; then exit 0; fi
+            sleep $((attempt * 5))
+            git pull --rebase origin main
+          done
+          echo "::error::could not push the formula update to main"
+          exit 1

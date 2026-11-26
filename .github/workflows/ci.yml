@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  # The release workflow runs the same checks on the commit it releases, before the tag or anything else exists.
+  workflow_call:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  hygiene:
+    name: Forbidden strings, formula syntax
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: No retired names in the tree
+        # The pattern is built from pieces so that this file does not match it.
+        run: |
+          bad="$(printf '%s|%s|%s|%s' 'ave''grv' 'ban''dy' 'mime''dia' 'rebel''seleven')"
+          found=0
+          if git grep -nIiE --untracked -e "$bad" -- .; then found=1; fi
+          if git ls-files --cached --others --exclude-standard \
+            | while IFS= read -r f; do [ -e "$f" ] && printf '%s\n' "$f"; done | grep -iE "$bad"; then found=1; fi
+          if [ "$found" = 1 ]; then
+            echo "::error::A retired name is back in the tree (see the lines above)."
+            exit 1
+          fi
+      - name: Homebrew formula parses
+        run: ruby -c Formula/cipherlog.rb
+
+  java:
+    name: Java core + Android library + sample
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: android
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+      # The runner image has the Android SDK ($ANDROID_HOME) with accepted licenses.
+      # :sample:assembleRelease runs R8 (minify on), as a production app does: a missing consumer rule fails here. The
+      # second run is an app that excluded Tink; it must build too (the writer turns itself off at run time).
+      - run: ./gradlew :cipherlog-core:test :cipherlog:testDebugUnitTest :cipherlog:assembleRelease :sample:assembleDebug :sample:assembleRelease --no-daemon
+      - run: ./gradlew :sample:assembleRelease -Pcipherlog.sample.withoutTink=true --no-daemon
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: java-test-reports
+          path: |
+            android/cipherlog-core/build/reports/tests
+            android/cipherlog/build/reports/tests
+
+  rust:
+    name: Rust CLI (fmt, clippy, test)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Rust toolchain (rustup on the runner image)
+        run: rustup toolchain install stable --profile minimal --component rustfmt,clippy && rustup default stable
+      - run: cargo fmt --check
+      - run: cargo clippy --locked --all-targets -- -D warnings
+      - run: cargo test --locked
+
+  swift:
+    name: Swift (test, example app, pod lib lint)
+    # On every push to main too: a release is made from main, and its commit must have passed the Swift tests.
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Select the newest stable Xcode
+        run: |
+          xcode="$(ls -d /Applications/Xcode_*.app | grep -vi beta | sort -V | tail -n 1)"
+          sudo xcode-select -s "$xcode"
+          xcodebuild -version
+      - run: swift test
+      - name: Example app builds
+        run: |
+          brew install xcodegen
+          cd ios/Example
+          xcodegen generate
+          xcodebuild -project CipherLogExample.xcodeproj -scheme CipherLogExample \
+            -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build
+      - name: pod lib lint
+        env:
+          LANG: en_US.UTF-8
+        run: pod lib lint CipherLog.podspec --allow-warnings
