@@ -18,7 +18,8 @@ permissions:
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  # A newer push replaces an older run. A release calls this workflow from its own run and is not affected.
+  cancel-in-progress: true
 
 jobs:
   secrets:
@@ -106,8 +107,9 @@ jobs:
 
   swift:
     name: Swift (test, example app, pod lib lint)
-    # On every push to main too: a release is made from main, and its commit must have passed the Swift tests.
-    if: ${{ !inputs.skip_macos }}
+    # macOS runners queue for a long time; a push to main skips this job. Pull requests and every release run it,
+    # and a release publishes nothing before it passes.
+    if: ${{ github.event_name != 'push' && !inputs.skip_macos }}
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
