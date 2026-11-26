@@ -229,6 +229,61 @@ SentryAndroid.init(this) { options ->
 }
 ```
 
+## More device info
+
+Every file starts with a device block: app version and install source, OS and model, locale and free space. Six more
+collectors are optional and off by default: `versionHistory` (every version first seen on the device, with its day),
+`installDates`, `memory` (RAM, memory pressure, power and thermal state), `screen` (size, density, text size, dark
+mode), `network` (connection type only) and `storageUsage` (sizes of the app's own folders). They never collect names,
+accounts, network names, addresses, carrier names or file names.
+
+```swift
+// iOS, on the main thread (screen reads UIKit there)
+CipherLog.start(key: key, options: .init(collectors: CipherLogCollector.defaults + CipherLogCollector.optional()))
+```
+
+```kotlin
+// Android
+CipherLog.start(this, key, CipherLog.Options().addCollectors(OptionalCollectors.all(this)))
+```
+
+Single ones work too: `.versionHistory(defaults:)`, `.installDates`, `.memory`, `.screen()`, `.network()`,
+`.storageUsage(appGroup:)` on iOS; `OptionalCollectors.versionHistory(context)`, `installDates`, `memory`, `screen`,
+`network`, `storageUsage` on Android. If you moved the logs with `Options.directory(dir)`, pass the same folder:
+`OptionalCollectors.all(this, dir)`, so `storageUsage` measures it. The Android `network` collector needs `ACCESS_NETWORK_STATE`. cipherlog does not
+add it to your manifest; without it the line says `unknown (no ACCESS_NETWORK_STATE)`. On iOS, `versionHistory` with an
+App Group suite needs the reason `1C8F.1` in your app's privacy manifest; the library's manifest covers `.standard`.
+
+### Your own collectors
+
+Anything only your app knows (the signed-in account's id, which key is current, whether a feature flag is on) goes
+into the block with a collector of your own. Each returns zero or more lines; the name is printed before them.
+
+```swift
+// iOS
+CipherLog.start(key: key, options: .init(collectors: CipherLogCollector.defaults + [
+    CipherLogCollector(name: "account") { ["id \(Session.shared.userId ?? "-") · plan \(Session.shared.plan)"] },
+    CipherLogCollector(name: "flags") { Flags.all.map { "\($0.name) \($0.isOn ? "on" : "off")" } },
+]))
+```
+
+```kotlin
+// Android
+CipherLog.start(this, key, CipherLog.Options()
+    .addCollector(CipherLogCollector.of("account") { listOf("id ${session.userId} · plan ${session.plan}") })
+    .addCollector(CipherLogCollector.of("flags") { flags.all.map { "${it.name} ${if (it.on) "on" else "off"}" } }))
+```
+
+- The lines land at the top of every new file (`device: account · id 42 · plan free`) and in the fresh `device now`
+  block of every export.
+- Collectors run on the library's worker thread. Never wait for the main thread in one: read values that are safe to
+  read from any thread, or keep a copy that the main thread updates.
+- A collector that throws gives `account · failed <ErrorType>`; the others still run.
+- `scrub` runs over collector lines too, but do not rely on it: never put names, e-mail addresses, tokens or other
+  personal data into a collector.
+- To replace the built-in collectors instead of adding to them, pass only your own list (`collectors: [...]` on iOS,
+  `Options.collectors(list)` on Android).
+
 ## Keys and the CLI
 
 Install the CLI with Homebrew on macOS or Linux:

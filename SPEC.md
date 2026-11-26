@@ -316,6 +316,38 @@ The library must be usable with a few lines and without changing existing log ca
   excluded from backup; Android: `noBackupFilesDir/cipherlog`), process name, built-in device collectors (app version
   and build, install source, OS, device model, locale, rounded free space; never names, accounts, ad ids, location,
   device name), Logcat/os.Logger passthrough (on by default; with no started writer `CipherLogger` always forwards).
+- Optional device collectors, never in the defaults; an app opts in with one line (iOS:
+  `collectors: CipherLogCollector.defaults + CipherLogCollector.optional()`, on the main thread; Android:
+  `options.addCollectors(OptionalCollectors.all(context))`), or picks single ones. Same names and line shapes on both
+  platforms where the platform allows:
+  - `versionHistory · 1.4.1 (16) since 2026-11-20 · 1.4 (15) since 2026-11-12`: every version and build first seen on
+    the device with its UTC day, newest first, at most 20, kept in the app's own storage (iOS: `UserDefaults`, default
+    `.standard`, key `cipherlog.versionHistory`; Android: private SharedPreferences file `cipherlog`). Recorded when the
+    collector is created and when a file opens.
+  - `installDates · installed 2026-11-12 · updated 2026-11-20` (UTC days). Android: `firstInstallTime` and
+    `lastUpdateTime`. iOS has no such API, both are approximations: installed is the creation date of the data
+    container's Library folder; updated is the UTC day the running version and build was first seen (`UserDefaults`
+    key `cipherlog.installDates.build`; in the first build with the collector, that first day). iOS reads no
+    timestamp outside the app's data container.
+  - `memory`: total RAM rounded to 0.5 GB (binary), then Android: memory class and large memory class, low-RAM device,
+    low memory now, power save; iOS: what the process may still allocate (`os_proc_available_memory`), Low Power Mode,
+    thermal state.
+  - `screen`: Android: size in dp, density bucket and dpi, font scale, dark; iOS: size in points and scale, preferred
+    content size category, dark. iOS reads UIKit only on the main thread: when the collector is created and on
+    becoming active or a text-size change; created off the main thread, the line says so.
+  - `network · wifi · expensive no · constrained no`: the connection type only (`wifi`, `cellular`, `ethernet`, `none`,
+    `other`), metered and constrained, both for the current network (iOS: `isConstrained`, Low Data Mode; Android:
+    metered and Data Saver restricts the app, since Data Saver leaves unmetered networks alone). Android needs `ACCESS_NETWORK_STATE`,
+    which the library never adds to its manifest: without it the line is `unknown (no ACCESS_NETWORK_STATE)`. iOS keeps
+    one `NWPathMonitor` per collector.
+  - `storageUsage`: the size of the app's own folders (Android: files, cache, no_backup, databases and the log
+    directory, the one passed to `OptionalCollectors.all(context, logDirectory)` when the app moved it; iOS:
+    Documents, Caches, Application Support, tmp and the App Group container when given), as logical sizes (sum of
+    file lengths, not allocated blocks) on both, KB under 1 MB, then MB and GB with one decimal. The walk stops after
+    50 000 entries or 200 ms in all (Android 26+ reads directories lazily; 23–25 checks the cap before each directory
+    read); a folder cut short shows `≥` and what was counted, a folder not reached `not counted`, a missing one `none`.
+  - Privacy: none of them collects names, accounts, ids, network names (SSID, BSSID), addresses, carrier names or file
+    names. Creating one never throws; a failure while a file opens is `<name> · failed <type>` like any collector.
 - Starting with the test key from `vectors/test-key.json` in a release build (iOS: the package compiled without
   `DEBUG`; Android: the app not debuggable) writes a warning to the system log and to diagnostics at every start. The
   libraries recognise the test key by its `keyId` (`dacb47e7a1ba0cf1`) and do not embed the key itself.

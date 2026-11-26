@@ -30,6 +30,10 @@ First alpha. The `cipherlog-v1` file format is fixed; the APIs may still change 
   256 KiB, 2 MiB per process, wipe, a support export of up to 4 MiB, crash bundles (`recentBundle`,
   `previousRunBundle`), `scrub`, and turning itself off with one diagnostics line on disk full or a write or crypto
   error.
+- Six optional device collectors on both platforms, not in the defaults: `versionHistory` (versions first seen on the
+  device), `installDates`, `memory`, `screen`, `network` (connection type only) and `storageUsage` (sizes of the app's
+  own folders, capped walk). iOS: `CipherLogCollector.optional()`; Android: `OptionalCollectors.all(context)` (or
+  `all(context, logDirectory)` with a custom log directory).
 - A warning in the system log and in diagnostics when a release build starts with the published test key.
 - CLI `cipherlog` in Rust: `keygen` (to a 0600 file, or into 1Password through `op` on stdin), `keyid`, `open` (files,
   bundles and armored bundles, several keys, `op://` references, capped output, escaped names), `write`. Prebuilt
@@ -37,8 +41,8 @@ First alpha. The `cipherlog-v1` file format is fixed; the APIs may still change 
 - Shared vectors: test key, byte-exact records with rejection reasons, key strings, armor cases and real files from
   every implementation, which every other implementation must open.
 
-- A privacy manifest (`PrivacyInfo.xcprivacy`, in the Swift package and the pod) for the file-timestamp and disk-space
-  APIs the library calls, and R8 rules inside the Android artifacts, so a minified release needs nothing extra.
+- A privacy manifest (`PrivacyInfo.xcprivacy`, in the Swift package and the pod) for the file-timestamp, disk-space
+  and user-defaults APIs the library calls, and R8 rules inside the Android artifacts, so a minified release needs nothing extra.
 
 ### Notes
 
