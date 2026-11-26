@@ -1,0 +1,106 @@
+source not verified: anyone with the public key can make a cipherlog file
+sample.cipherlogs#1 · keyId dacb47e7a1ba0cf1 · file cdbac81d · platform 0 (unknown) · process 1 · created 2026-11-18T11:06:40.000Z · 7 records: closed
+sample.cipherlogs#2 · keyId dacb47e7a1ba0cf1 · file 89a393d9 · platform 0 (unknown) · process 1 · created 2026-11-18T11:08:20.000Z · 7 records: not closed (crash or still open), completeness unknown
+sample.cipherlog · keyId dacb47e7a1ba0cf1 · file cdbac81d · platform 0 (unknown) · process 1 · created 2026-11-18T11:06:40.000Z · 7 records: closed; duplicate of sample.cipherlogs#1, lines shown once
+unclosed.cipherlog · keyId dacb47e7a1ba0cf1 · file 89a393d9 · platform 0 (unknown) · process 1 · created 2026-11-18T11:08:20.000Z · 7 records: not closed (crash or still open), completeness unknown; duplicate of sample.cipherlogs#2, lines shown once
+sample.cipherlogs#1 · keyId dacb47e7a1ba0cf1 · file 56c1d5a6 · platform 2 (Android) · process 1 · created 2026-11-18T11:06:40.000Z · 6 records: closed
+sample.cipherlogs#2 · keyId dacb47e7a1ba0cf1 · file 79810c10 · platform 2 (Android) · process 1 · created 2026-11-18T11:06:40.000Z · 6 records: not closed (crash or still open), completeness unknown
+sample.cipherlog · keyId dacb47e7a1ba0cf1 · file 56c1d5a6 · platform 2 (Android) · process 1 · created 2026-11-18T11:06:40.000Z · 6 records: closed; duplicate of sample.cipherlogs#1, lines shown once
+unclosed.cipherlog · keyId dacb47e7a1ba0cf1 · file 79810c10 · platform 2 (Android) · process 1 · created 2026-11-18T11:06:40.000Z · 6 records: not closed (crash or still open), completeness unknown; duplicate of sample.cipherlogs#2, lines shown once
+
+2026-11-18T11:06:40.000Z I sample.app device: cipherlog 0.1.0-alpha.1 · file cdbac81d · platform 0 · process 1
+2026-11-18T11:06:40.000Z I sample.app device: phone · TestPhone1,1
+2026-11-18T11:06:40.000Z I sample.app device: phone · TestOS 1.0 · ru-RU
+2026-11-18T11:06:40.000Z I sample device: cipherlog 0.1.0-alpha.1 · file 56c1d5a6 · platform 2 · process 1
+2026-11-18T11:06:40.000Z I sample device: phone · Pixel 9 · Android 16 (API 36)
+2026-11-18T11:06:40.000Z I sample device: cipherlog 0.1.0-alpha.1 · file 79810c10 · platform 2 · process 1
+2026-11-18T11:06:40.000Z I sample device: phone · Pixel 9 · Android 16 (API 36)
+2026-11-18T11:06:40.001Z D sample boot: cold start
+2026-11-18T11:06:40.001Z D sample boot: cold start
+2026-11-18T11:06:40.002Z I sample net: GET /status 200 in 84 ms
+2026-11-18T11:06:40.002Z I sample net: GET /status 200 in 84 ms
+2026-11-18T11:06:40.003Z N sample auth: signed in
+2026-11-18T11:06:40.003Z N sample auth: signed in
+2026-11-18T11:06:40.004Z I sample ui: Grüße aus München, ünïcödé ✓
+2026-11-18T11:06:40.004Z I sample ui: Grüße aus München, ünïcödé ✓
+2026-11-18T11:06:40.005Z I sample ui: 日本語のテキスト
+2026-11-18T11:06:40.005Z I sample ui: 日本語のテキスト
+2026-11-18T11:06:40.006Z I sample ui: emoji 🦭🎉
+2026-11-18T11:06:40.006Z I sample ui: emoji 🦭🎉
+2026-11-18T11:06:40.007Z D sample cache: 12 items, 3.4 MB
+2026-11-18T11:06:40.007Z D sample cache: 12 items, 3.4 MB
+2026-11-18T11:06:40.008Z W sample net: retry 1 of 3
+2026-11-18T11:06:40.008Z W sample net: retry 1 of 3
+2026-11-18T11:06:40.009Z I sample sync: started
+2026-11-18T11:06:40.009Z I sample sync: started
+2026-11-18T11:06:40.010Z D sample sync: page 1
+2026-11-18T11:06:40.010Z D sample sync: page 1
+2026-11-18T11:06:40.011Z D sample sync: page 2
+2026-11-18T11:06:40.011Z D sample sync: page 2
+2026-11-18T11:06:40.012Z I sample sync: done, 42 changes
+2026-11-18T11:06:40.012Z I sample sync: done, 42 changes
+2026-11-18T11:06:40.013Z E sample db: write failed · IllegalStateException: disk I/O
+2026-11-18T11:06:40.013Z E sample db: write failed · IllegalStateException: disk I/O
+2026-11-18T11:06:40.014Z I sample player: tab	here
+2026-11-18T11:06:40.014Z I sample player: tab	here
+2026-11-18T11:06:40.015Z I sample player: line one\nline two
+2026-11-18T11:06:40.015Z I sample player: line one\nline two
+2026-11-18T11:06:40.016Z N sample push: token refreshed
+2026-11-18T11:06:40.016Z N sample push: token refreshed
+2026-11-18T11:06:40.017Z D sample camera: preview 1920x1080
+2026-11-18T11:06:40.017Z D sample camera: preview 1920x1080
+2026-11-18T11:06:40.018Z I sample share: sheet opened
+2026-11-18T11:06:40.018Z I sample share: sheet opened
+2026-11-18T11:06:40.019Z W sample storage: 91% full
+2026-11-18T11:06:40.019Z W sample storage: 91% full
+2026-11-18T11:06:40.020Z I sample widget: timeline reloaded
+2026-11-18T11:06:40.020Z I sample widget: timeline reloaded
+2026-11-18T11:06:40.021Z F sample crash: fatal state
+2026-11-18T11:06:40.021Z F sample crash: fatal state
+2026-11-18T11:06:40.022Z I sample app: background
+2026-11-18T11:06:40.022Z I sample app: background
+2026-11-18T11:06:40.137Z D sample.app net: GET /v1/items 200 in 84 ms
+2026-11-18T11:06:40.274Z I sample.app ui: screen opened: Home
+2026-11-18T11:06:40.411Z N sample.app sync: cursor moved to 41
+2026-11-18T11:06:40.548Z I sample.app i18n: Привет, мир · こんにちは · emoji 🦭👍🏽
+2026-11-18T11:06:40.685Z W sample.app net: retry 1 after timeout
+2026-11-18T11:06:40.822Z I sample.app ui: tap at 120,480
+2026-11-18T11:06:40.959Z D sample.app cache: hit ratio 0.93
+2026-11-18T11:06:41.096Z E sample.app store: DecodingError: field "id" missing
+2026-11-18T11:06:41.233Z I sample.app multi: first line\nsecond line\nthird\nend
+2026-11-18T11:06:41.370Z I sample.app ctl: bell � esc �[31m del � c1 � tab 	 ok
+2026-11-18T11:06:41.507Z N sample.app -: no category
+2026-11-18T11:06:41.644Z I sample.app bad_name_with_spaces____n_code-a: category sanitised
+2026-11-18T11:06:41.781Z D sample.app net: GET /v1/items 304
+2026-11-18T11:06:41.918Z W sample.app disk: free space 120 MB
+2026-11-18T11:06:42.055Z I sample.app ui: screen closed: Home
+2026-11-18T11:06:42.192Z F sample.app core: assertion failed: state == ready
+2026-11-18T11:06:42.329Z I sample.app app: background
+2026-11-18T11:06:42.466Z D sample.app bg: refresh scheduled in 900 s
+2026-11-18T11:06:42.603Z I sample.app app: foreground
+2026-11-18T11:06:42.740Z E sample.app net: URLError: offline
+2026-11-18T11:06:42.877Z I sample.app app: last line before the end
+2026-11-18T11:08:20.000Z I sample.app device: cipherlog 0.1.0-alpha.1 · file 89a393d9 · platform 0 · process 1
+2026-11-18T11:08:20.000Z I sample.app device: phone · TestPhone1,1
+2026-11-18T11:08:20.000Z I sample.app device: phone · TestOS 1.0 · ru-RU
+2026-11-18T11:08:20.137Z D sample.app net: GET /v1/items 200 in 84 ms
+2026-11-18T11:08:20.274Z I sample.app ui: screen opened: Home
+2026-11-18T11:08:20.411Z N sample.app sync: cursor moved to 41
+2026-11-18T11:08:20.548Z I sample.app i18n: Привет, мир · こんにちは · emoji 🦭👍🏽
+2026-11-18T11:08:20.685Z W sample.app net: retry 1 after timeout
+2026-11-18T11:08:20.822Z I sample.app ui: tap at 120,480
+2026-11-18T11:08:20.959Z D sample.app cache: hit ratio 0.93
+2026-11-18T11:08:21.096Z E sample.app store: DecodingError: field "id" missing
+2026-11-18T11:08:21.233Z I sample.app multi: first line\nsecond line\nthird\nend
+2026-11-18T11:08:21.370Z I sample.app ctl: bell � esc �[31m del � c1 � tab 	 ok
+2026-11-18T11:08:21.507Z N sample.app -: no category
+2026-11-18T11:08:21.644Z I sample.app bad_name_with_spaces____n_code-a: category sanitised
+2026-11-18T11:08:21.781Z D sample.app net: GET /v1/items 304
+2026-11-18T11:08:21.918Z W sample.app disk: free space 120 MB
+2026-11-18T11:08:22.055Z I sample.app ui: screen closed: Home
+2026-11-18T11:08:22.192Z F sample.app core: assertion failed: state == ready
+2026-11-18T11:08:22.329Z I sample.app app: background
+2026-11-18T11:08:22.466Z D sample.app bg: refresh scheduled in 900 s
+2026-11-18T11:08:22.603Z I sample.app app: foreground
+2026-11-18T11:08:22.740Z E sample.app net: URLError: offline
+2026-11-18T11:08:22.877Z I sample.app app: last line before the end

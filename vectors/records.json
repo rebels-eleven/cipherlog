@@ -1,0 +1,98 @@
+{
+  "note": "cipherlog-v1 vectors, SPEC.md 8. Test key only.",
+  "keyId": "dacb47e7a1ba0cf1",
+  "header": {
+    "hex": "43504c31dacb47e7a1ba0cf170d0425fe4d91883a1b4ece33251f3040a9b4309709372e40e2a35e0fb6f3904e062d53432e1f12efc4549de30c7e66a738b4d1722a3f8ed4d91df1dfd3284c0d5908536fc5025ffb4c168cac39ecc1d941f1f14fc2515eedb4fa827f1b4cef7db76c33473ac5592e641",
+    "fileKey": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f",
+    "fileId": "a0a1a2a3a4a5a6a7a8a9aaabacadaeaf",
+    "createdAt": 1795000000123,
+    "platform": 1,
+    "process": 2,
+    "info": "6369706865726c6f672d763143504c31dacb47e7a1ba0cf1"
+  },
+  "records": [
+    {
+      "name": "first record",
+      "seq": 0,
+      "flags": 0,
+      "plaintext": "ca48cdc9c95748ce2cc8482dcac94fe702000000ffff",
+      "record": "000000260000000000d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e5296866b69975efba7ee8aab0c5e1b5c6b"
+    },
+    {
+      "name": "empty plaintext",
+      "seq": 1,
+      "flags": 0,
+      "plaintext": "",
+      "record": "000000100000000100cf2c09fb3c026599f61c6fbba9b96067"
+    },
+    {
+      "name": "final record",
+      "seq": 2,
+      "flags": 1,
+      "plaintext": "4baa4ce50200",
+      "record": "0000001600000002010660fc12087d482146ca26e81ca22796548a318277df"
+    }
+  ],
+  "file": {
+    "hex": "43504c31dacb47e7a1ba0cf170d0425fe4d91883a1b4ece33251f3040a9b4309709372e40e2a35e0fb6f3904e062d53432e1f12efc4549de30c7e66a738b4d1722a3f8ed4d91df1dfd3284c0d5908536fc5025ffb4c168cac39ecc1d941f1f14fc2515eedb4fa827f1b4cef7db76c33473ac5592e641000000260000000000d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e5296866b69975efba7ee8aab0c5e1b5c6b000000100000000100cf2c09fb3c026599f61c6fbba9b960670000001600000002010660fc12087d482146ca26e81ca22796548a318277df",
+    "text": "hello cipherlog\nbye\n",
+    "final": true
+  },
+  "rejections": [
+    {
+      "name": "len changed",
+      "record": "000000270000000000d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e5296866b69975efba7ee8aab0c5e1b5c6b",
+      "seq": 0,
+      "reason": "truncated"
+    },
+    {
+      "name": "seq changed",
+      "record": "000000260000000100d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e5296866b69975efba7ee8aab0c5e1b5c6b",
+      "seq": 0,
+      "reason": "seq 1, expected 0"
+    },
+    {
+      "name": "flags changed",
+      "record": "000000260000000001d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e5296866b69975efba7ee8aab0c5e1b5c6b",
+      "seq": 0,
+      "reason": "authentication failed"
+    },
+    {
+      "name": "reserved flag bit",
+      "record": "000000260000000002d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e52d603a9c9e23ed986b476dd73c8282596",
+      "seq": 0,
+      "reason": "reserved flag bits 0x02"
+    },
+    {
+      "name": "ciphertext changed",
+      "record": "000000260000000000d3f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e5296866b69975efba7ee8aab0c5e1b5c6b",
+      "seq": 0,
+      "reason": "authentication failed"
+    },
+    {
+      "name": "tag changed",
+      "record": "000000260000000000d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e5296866b69975efba7ee8aab0c5e1b5c6a",
+      "seq": 0,
+      "reason": "authentication failed"
+    },
+    {
+      "name": "wrong expected seq",
+      "record": "000000260000000000d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e5296866b69975efba7ee8aab0c5e1b5c6b",
+      "seq": 1,
+      "reason": "seq 0, expected 1"
+    },
+    {
+      "name": "bad seq and cut short",
+      "record": "000000260000000100d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e5296866b69975efba7ee8aab0c5e1b5c",
+      "seq": 0,
+      "reason": "truncated"
+    },
+    {
+      "name": "reserved flag bit and cut short",
+      "record": "000000260000000002d2f08ff864b1ee1f3fa9144c658a01c0fab1f3f51e52d603a9c9e23ed986b476dd73c82825",
+      "seq": 0,
+      "reason": "truncated"
+    }
+  ],
+  "rejectionOrder": "SPEC.md 5.3: length bounds, truncated, seq, flags, AEAD; reason is the exact text after \"readable up to record N (\""
+}

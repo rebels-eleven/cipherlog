@@ -1,0 +1,9 @@
+.build/
+.swiftpm/
+build/
+.gradle/
+local.properties
+*.xcodeproj/xcuserdata/
+.DS_Store
+.idea/
+target/

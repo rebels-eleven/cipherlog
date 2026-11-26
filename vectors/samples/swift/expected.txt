@@ -1,0 +1,24 @@
+2026-11-18T11:06:40.000Z I sample device: cipherlog 0.1.0-alpha.1 · file db468387 · platform 1 · process 1
+2026-11-18T11:06:40.000Z I sample device: sample · collector line · ok
+2026-11-18T11:06:40.003Z I sample app: launch
+2026-11-18T11:06:40.006Z D sample net: GET /v1/items 200 in 84 ms
+2026-11-18T11:06:40.009Z I sample net: connected to wss://example.invalid
+2026-11-18T11:06:40.012Z N sample ui: screen home
+2026-11-18T11:06:40.015Z D sample cache: hit ratio 0.93
+2026-11-18T11:06:40.018Z I sample i18n: Привет, мир · こんにちは · مرحبا · 👋🏽
+2026-11-18T11:06:40.021Z W sample net: retry 1 after timeout
+2026-11-18T11:06:40.024Z I sample db: migrated to schema 4
+2026-11-18T11:06:40.027Z E sample sync: DecodingError: keyNotFound("id")
+2026-11-18T11:06:40.030Z D sample ui: tab	separated	values
+2026-11-18T11:06:40.033Z N sample push: token refreshed
+2026-11-18T11:06:40.036Z I sample multi: first line\nsecond line\nthird
+2026-11-18T11:06:40.039Z D sample ctrl: bell � escape �[0m del �
+2026-11-18T11:06:40.042Z F sample store: write failed: disk I/O
+2026-11-18T11:06:40.045Z I sample -: no category
+2026-11-18T11:06:40.048Z I sample weird_category_: category sanitised
+2026-11-18T11:06:40.051Z W sample mem: memory warning level 2
+2026-11-18T11:06:40.054Z D sample emoji: 🦭🎉✓ ünïcødé
+2026-11-18T11:06:40.057Z I sample app: background
+2026-11-18T11:06:40.060Z N sample app: foreground
+2026-11-18T11:06:40.063Z E sample auth: 401 on refresh
+2026-11-18T11:06:40.066Z I sample app: done

@@ -1,0 +1,24 @@
+2026-11-18T11:06:40.000Z I sample.app device: cipherlog 0.1.0-alpha.1 · file 681d775d · platform 0 · process 1
+2026-11-18T11:06:40.000Z I sample.app device: phone · TestPhone1,1
+2026-11-18T11:06:40.000Z I sample.app device: phone · TestOS 1.0 · ru-RU
+2026-11-18T11:06:40.137Z D sample.app net: GET /v1/items 200 in 84 ms
+2026-11-18T11:06:40.274Z I sample.app ui: screen opened: Home
+2026-11-18T11:06:40.411Z N sample.app sync: cursor moved to 41
+2026-11-18T11:06:40.548Z I sample.app i18n: Привет, мир · こんにちは · emoji 🦭👍🏽
+2026-11-18T11:06:40.685Z W sample.app net: retry 1 after timeout
+2026-11-18T11:06:40.822Z I sample.app ui: tap at 120,480
+2026-11-18T11:06:40.959Z D sample.app cache: hit ratio 0.93
+2026-11-18T11:06:41.096Z E sample.app store: DecodingError: field "id" missing
+2026-11-18T11:06:41.233Z I sample.app multi: first line\nsecond line\nthird\nend
+2026-11-18T11:06:41.370Z I sample.app ctl: bell � esc �[31m del � c1 � tab 	 ok
+2026-11-18T11:06:41.507Z N sample.app -: no category
+2026-11-18T11:06:41.644Z I sample.app bad_name_with_spaces____n_code-a: category sanitised
+2026-11-18T11:06:41.781Z D sample.app net: GET /v1/items 304
+2026-11-18T11:06:41.918Z W sample.app disk: free space 120 MB
+2026-11-18T11:06:42.055Z I sample.app ui: screen closed: Home
+2026-11-18T11:06:42.192Z F sample.app core: assertion failed: state == ready
+2026-11-18T11:06:42.329Z I sample.app app: background
+2026-11-18T11:06:42.466Z D sample.app bg: refresh scheduled in 900 s
+2026-11-18T11:06:42.603Z I sample.app app: foreground
+2026-11-18T11:06:42.740Z E sample.app net: URLError: offline
+2026-11-18T11:06:42.877Z I sample.app app: last line before the end

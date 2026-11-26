@@ -1,0 +1,179 @@
+{
+ "comment": "SPEC.md 1.1. A parser of `kind` returns `key` (hex) or fails with a message that is exactly `cipherlog key: ` + `error`. No error may contain a private key or any part of it. Hand-written cases.",
+ "cases": [
+  {
+   "name": "lowercase",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "key": "ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170"
+  },
+  {
+   "name": "uppercase hex",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ECD8B29E913351F6A28FDA6E663AD350273ED38A9B44FE8F1B8116A236154170",
+   "key": "ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170"
+  },
+  {
+   "name": "whitespace around (space, tab, CR, LF)",
+   "kind": "public",
+   "input": " \t\r\ncipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170\r\n \t",
+   "key": "ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170"
+  },
+  {
+   "name": "private lowercase",
+   "kind": "private",
+   "input": "cipherlog-priv-v1:5856624c8e530d58d179b4aff156af9b220175f5d16ae8dcf201c1bd7fe3d251",
+   "key": "5856624c8e530d58d179b4aff156af9b220175f5d16ae8dcf201c1bd7fe3d251"
+  },
+  {
+   "name": "private uppercase hex",
+   "kind": "private",
+   "input": "cipherlog-priv-v1:5856624C8E530D58D179B4AFF156AF9B220175F5D16AE8DCF201C1BD7FE3D251",
+   "key": "5856624c8e530d58d179b4aff156af9b220175f5d16ae8dcf201c1bd7fe3d251"
+  },
+  {
+   "name": "empty",
+   "kind": "public",
+   "input": "",
+   "error": "the key string is empty"
+  },
+  {
+   "name": "only whitespace",
+   "kind": "public",
+   "input": " \t\r\n",
+   "error": "the key string is empty"
+  },
+  {
+   "name": "private key given to the public parser",
+   "kind": "public",
+   "input": "cipherlog-priv-v1:5856624c8e530d58d179b4aff156af9b220175f5d16ae8dcf201c1bd7fe3d251",
+   "error": "this is a PRIVATE key (cipherlog-priv-v1:\u2026); an app ships only the public key (cipherlog-pub-v1:\u2026)"
+  },
+  {
+   "name": "public key given to the private parser",
+   "kind": "private",
+   "input": "cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "error": "this is a public key (cipherlog-pub-v1:\u2026); opening logs needs the private key (cipherlog-priv-v1:\u2026)"
+  },
+  {
+   "name": "prefix in uppercase",
+   "kind": "public",
+   "input": "CIPHERLOG-PUB-V1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "error": "the key string must start with cipherlog-pub-v1:"
+  },
+  {
+   "name": "quoted",
+   "kind": "public",
+   "input": "\"cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170\"",
+   "error": "the key string must start with cipherlog-pub-v1:"
+  },
+  {
+   "name": "assignment around",
+   "kind": "public",
+   "input": "key = cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "error": "the key string must start with cipherlog-pub-v1:"
+  },
+  {
+   "name": "bare hex",
+   "kind": "public",
+   "input": "ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "error": "the key string must start with cipherlog-pub-v1:"
+  },
+  {
+   "name": "no-break space before",
+   "kind": "public",
+   "input": "\u00a0cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "error": "the key string must start with cipherlog-pub-v1:"
+  },
+  {
+   "name": "byte order mark before",
+   "kind": "public",
+   "input": "\ufeffcipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "error": "the key string must start with cipherlog-pub-v1:"
+  },
+  {
+   "name": "private: wrong prefix",
+   "kind": "private",
+   "input": "cipherlog-private-v1:5856624c8e530d58d179b4aff156af9b220175f5d16ae8dcf201c1bd7fe3d251",
+   "error": "the key string must start with cipherlog-priv-v1:"
+  },
+  {
+   "name": "prefix only",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:",
+   "error": "expected 64 hex characters after the prefix, got 0"
+  },
+  {
+   "name": "63 characters",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a23615417",
+   "error": "expected 64 hex characters after the prefix, got 63"
+  },
+  {
+   "name": "65 characters",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a2361541700",
+   "error": "expected 64 hex characters after the prefix, got 65"
+  },
+  {
+   "name": "a letter that is not hex",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ecd8b29e9g3351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "error": "character 10 after the prefix is not a hex digit (\"g\")"
+  },
+  {
+   "name": "text after the key",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170 trailing",
+   "error": "character 65 after the prefix is not a hex digit (U+0020)"
+  },
+  {
+   "name": "characters are checked before the length",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ecd8b29e913351f6a28fz",
+   "error": "character 21 after the prefix is not a hex digit (\"z\")"
+  },
+  {
+   "name": "no-break space after",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170\u00a0",
+   "error": "character 65 after the prefix is not a hex digit (U+00A0)"
+  },
+  {
+   "name": "fullwidth digit",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:\uff10cd8b29e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "error": "character 1 after the prefix is not a hex digit (U+FF10)"
+  },
+  {
+   "name": "emoji counts as one character",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ecd8b\ud83d\ude009e913351f6a28fda6e663ad350273ed38a9b44fe8f1b8116a236154170",
+   "error": "character 6 after the prefix is not a hex digit (U+1F600)"
+  },
+  {
+   "name": "tab inside",
+   "kind": "public",
+   "input": "cipherlog-pub-v1:ecd8b29e913351f6a28fda6e663ad350\t273ed38a9b44fe8f1b8116a236154170",
+   "error": "character 33 after the prefix is not a hex digit (U+0009)"
+  },
+  {
+   "name": "private: a character that is not hex is not shown",
+   "kind": "private",
+   "input": "cipherlog-priv-v1:58x6624c8e530d58d179b4aff156af9b220175f5d16ae8dcf201c1bd7fe3d251",
+   "error": "character 3 after the prefix is not a hex digit"
+  },
+  {
+   "name": "private: text after the key is not shown",
+   "kind": "private",
+   "input": "cipherlog-priv-v1:5856624c8e530d58d179b4aff156af9b220175f5d16ae8dcf201c1bd7fe3d251zz",
+   "error": "character 65 after the prefix is not a hex digit"
+  },
+  {
+   "name": "private: wrong length",
+   "kind": "private",
+   "input": "cipherlog-priv-v1:5856624c8e530d58d179b4aff156af9b220175f5",
+   "error": "expected 64 hex characters after the prefix, got 40"
+  }
+ ]
+}

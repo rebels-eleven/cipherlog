@@ -1,0 +1,24 @@
+2026-11-18T11:06:40.000Z I sample device: cipherlog 0.1.0-alpha.1 · file 8089022a · platform 2 · process 1
+2026-11-18T11:06:40.000Z I sample device: phone · Pixel 9 · Android 16 (API 36)
+2026-11-18T11:06:40.001Z D sample boot: cold start
+2026-11-18T11:06:40.002Z I sample net: GET /status 200 in 84 ms
+2026-11-18T11:06:40.003Z N sample auth: signed in
+2026-11-18T11:06:40.004Z I sample ui: Grüße aus München, ünïcödé ✓
+2026-11-18T11:06:40.005Z I sample ui: 日本語のテキスト
+2026-11-18T11:06:40.006Z I sample ui: emoji 🦭🎉
+2026-11-18T11:06:40.007Z D sample cache: 12 items, 3.4 MB
+2026-11-18T11:06:40.008Z W sample net: retry 1 of 3
+2026-11-18T11:06:40.009Z I sample sync: started
+2026-11-18T11:06:40.010Z D sample sync: page 1
+2026-11-18T11:06:40.011Z D sample sync: page 2
+2026-11-18T11:06:40.012Z I sample sync: done, 42 changes
+2026-11-18T11:06:40.013Z E sample db: write failed · IllegalStateException: disk I/O
+2026-11-18T11:06:40.014Z I sample player: tab	here
+2026-11-18T11:06:40.015Z I sample player: line one\nline two
+2026-11-18T11:06:40.016Z N sample push: token refreshed
+2026-11-18T11:06:40.017Z D sample camera: preview 1920x1080
+2026-11-18T11:06:40.018Z I sample share: sheet opened
+2026-11-18T11:06:40.019Z W sample storage: 91% full
+2026-11-18T11:06:40.020Z I sample widget: timeline reloaded
+2026-11-18T11:06:40.021Z F sample crash: fatal state
+2026-11-18T11:06:40.022Z I sample app: background
