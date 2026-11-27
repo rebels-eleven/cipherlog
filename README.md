@@ -204,12 +204,23 @@ if (intent != null) startActivity(intent)
 The file is served by the library's own read-only content provider (authority `<applicationId>.cipherlog`, not
 exported). It cannot clash with your FileProvider.
 
-**Timber.** cipherlog does not depend on Timber. If you use Timber, plant this tree:
+**Timber.** cipherlog does not depend on Timber. If you use Timber, plant this tree. Timber appends the stack trace
+of `t` to the message before it calls `log`, so the tree cuts it off and passes `t` on: the file gets
+`upload failed · IOException: timeout`, as from `CipherLog.e`, and never a stack trace.
 
 ```kotlin
 class CipherLogTree : Timber.Tree() {
     override fun log(priority: Int, tag: String?, message: String, t: Throwable?) {
-        CipherLog.println(priority, tag ?: "-", message, t)
+        CipherLog.println(priority, tag ?: "-", if (t == null) message else message.withoutTrace(t), t)
+    }
+
+    private fun String.withoutTrace(t: Throwable): String {
+        val trace = StringWriter().also { t.printStackTrace(PrintWriter(it)) }.toString()   // Timber's own text
+        return when {
+            this == trace -> ""                                    // Timber.e(t)
+            endsWith("\n" + trace) -> dropLast(trace.length + 1)   // Timber.e(t, "upload failed")
+            else -> substringBefore("\n$t", substringBefore('\n'))
+        }
     }
 }
 
